@@ -1,0 +1,6 @@
+bepis-lite-client/bin
+bepis-lite-client/lib
+bepis-lite-client/lib64
+bepis-lite-client/pyvenv.cfg
+bepis-lite-server/target
+

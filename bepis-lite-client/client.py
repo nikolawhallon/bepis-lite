@@ -89,7 +89,7 @@ async def run():
                     "listen": {"model": "nova-2"},
                     "think": {
                         "provider": "anthropic",
-                        "model": "claude-3-haiku-20240307",
+                        "model": "claude-3-opus-20240229",
                         "instructions": "You are a beverage seller. You only sell coke and pepsi.",
                         # this function is what STS will call to submit orders
                         # for this call (note the "id" portion of the path)

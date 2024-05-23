@@ -96,7 +96,7 @@ async def run():
                         "functions": [
                             {
                                 "name": "submit_order",
-                                "description": "Get the current weather in a given location",
+                                "description": "Submit an order for a beverage.",
                                 "url": BEPIS_SERVER_URL + "/calls/" + id + "/order",
                                 "input_schema": {
                                     "type": "object",

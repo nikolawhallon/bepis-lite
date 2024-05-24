@@ -40,6 +40,7 @@ async fn main() {
         .route("/calls/:id", get(get_call))
         .route("/calls/:id/order", get(get_order))
         .route("/calls/:id/order", post(update_order))
+        .layer(tower_http::cors::CorsLayer::permissive())
         .with_state(shared_state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

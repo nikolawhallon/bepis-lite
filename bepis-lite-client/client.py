@@ -71,8 +71,8 @@ async def run():
             response = requests.delete(BEPIS_SERVER_URL + "/menu")
 
             # add some items to the menu
-            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "coke", "description": "a beverage", "price": 1.50})
-            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "pepsi", "description": "a beverage", "price": 2.50})
+            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "coke", "description": "a beverage", "price": 1.50, "category": "beverage"})
+            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "pepsi", "description": "a beverage", "price": 2.50, "category": "beverage"})
 
             # get the full menu so that we can give it to the LLM
             response = requests.get(BEPIS_SERVER_URL + "/menu")

@@ -27,6 +27,7 @@ struct Item {
     name: String,
     description: String,
     price: f64,
+    category: String,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

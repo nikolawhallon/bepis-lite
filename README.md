@@ -17,19 +17,19 @@ null
 {"type":"ConversationText","role":"assistant","content":"Certainly, let me add a Coke to your order."}
 null
 {"type":"ConversationText","role":"assistant","content":"The Coke has been added to your order."}
-{"items":[{"name":"coke","description":"a beverage","price":1.5}]}
+{"items":[{"name":"coke","description":"a beverage","price":1.5,"category":"beverage"}]}
 {"type":"ConversationText","role":"assistant","content":"Please let me know if you need anything else!"}
-{"items":[{"name":"coke","description":"a beverage","price":1.5}]}
+{"items":[{"name":"coke","description":"a beverage","price":1.5,"category":"beverage"}]}
 {"type":"UserStartedSpeaking"}
-{"items":[{"name":"coke","description":"a beverage","price":1.5}]}
+{"items":[{"name":"coke","description":"a beverage","price":1.5,"category":"beverage"}]}
 {"type":"AgentAudioDone","turn_index":0}
-{"items":[{"name":"coke","description":"a beverage","price":1.5}]}
+{"items":[{"name":"coke","description":"a beverage","price":1.5,"category":"beverage"}]}
 {"type":"ConversationText","role":"user","content":"Can I have a Pepsi also?"}
-{"items":[{"name":"coke","description":"a beverage","price":1.5}]}
+{"items":[{"name":"coke","description":"a beverage","price":1.5,"category":"beverage"}]}
 {"type":"ConversationText","role":"assistant","content":"Okay, I'll add a Pepsi to your order as well."}
-{"items":[{"name":"coke","description":"a beverage","price":1.5}]}
+{"items":[{"name":"coke","description":"a beverage","price":1.5,"category":"beverage"}]}
 {"type":"ConversationText","role":"assistant","content":"Please let me know if you need anything else!"}
-{"items":[{"name":"coke","description":"a beverage","price":1.5},{"name":"pepsi","description":"a beverage","price":2.5}]}
+{"items":[{"name":"coke","description":"a beverage","price":1.5,"category":"beverage"},{"name":"pepsi","description":"a beverage","price":2.5,"category":"beverage"}]}
 ```
 I haven't made the print statements that great yet, but they are showing the conversation as it occurs, as well as the results
 of polling the bepis-lite server to see if any items have been added to my order yet (by Deepgram STS, via the LLM function-calling).
@@ -63,8 +63,8 @@ Let's start to look at the sender:
             response = requests.delete(BEPIS_SERVER_URL + "/menu")
 
             # add some items to the menu
-            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "coke", "description": "a beverage", "price": 1.50})
-            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "pepsi", "description": "a beverage", "price": 2.50})
+            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "coke", "description": "a beverage", "price": 1.50, "category": "beverage"})
+            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "pepsi", "description": "a beverage", "price": 2.50, "category": "beverage"})
 
             # get the full menu so that we can give it to the LLM
             response = requests.get(BEPIS_SERVER_URL + "/menu")

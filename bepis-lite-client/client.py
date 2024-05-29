@@ -25,10 +25,10 @@ CHUNK = 8000
 audio_queue = asyncio.Queue()
 id_queue = asyncio.Queue()
 
-#STS_URL = "wss://sts.sandbox.deepgram.com"
-#BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
-STS_URL = "ws://localhost:4000"
-BEPIS_SERVER_URL = "http://localhost:3000"
+STS_URL = "wss://sts.sandbox.deepgram.com"
+BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
+#STS_URL = "ws://localhost:4000"
+#BEPIS_SERVER_URL = "http://localhost:3000"
 
 
 def callback(input_data, frame_count, time_info, status_flag):

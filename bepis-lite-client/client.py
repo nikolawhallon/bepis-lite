@@ -25,7 +25,9 @@ CHUNK = 8000
 audio_queue = asyncio.Queue()
 id_queue = asyncio.Queue()
 
-STS_URL = "ws://localhost:5000"
+#STS_URL = "wss://sts.sandbox.deepgram.com"
+#BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
+STS_URL = "ws://localhost:4000"
 BEPIS_SERVER_URL = "http://localhost:3000"
 
 
@@ -65,6 +67,17 @@ async def run():
             stream.close()
 
         async def sender(ws):
+            # clear the menu to give ourselves a fresh start
+            response = requests.delete(BEPIS_SERVER_URL + "/menu")
+
+            # add some items to the menu
+            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "coke", "description": "a beverage", "price": 1.50})
+            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "pepsi", "description": "a beverage", "price": 2.50})
+
+            # get the full menu so that we can give it to the LLM
+            response = requests.get(BEPIS_SERVER_URL + "/menu")
+            menu = response.text
+
             # we let the bepis backend server know we have a new call,
             # and we retrieve a unique id for this/the call
             response = requests.post(BEPIS_SERVER_URL + "/calls")
@@ -89,21 +102,21 @@ async def run():
                     "listen": {"model": "nova-2"},
                     "think": {
                         "provider": "anthropic",
-                        "model": "claude-3-opus-20240229",
-                        "instructions": "You are a beverage seller. You only sell coke and pepsi.",
-                        # this function is what STS will call to submit orders
+                        "model": "claude-3-haiku-20240307",
+                        "instructions": "You work taking orders at a drive-through. The menu, including the names, descriptions, and prices for the items that you sell, is as follows: " + menu,
+                        # this function is what STS will call to add items to the order
                         # for this call (note the "id" portion of the path)
                         "functions": [
                             {
-                                "name": "submit_order",
-                                "description": "Submit an order for a beverage.",
-                                "url": BEPIS_SERVER_URL + "/calls/" + id + "/order",
+                                "name": "add_item",
+                                "description": "Add an item to an order. Only use this function if the user has confirmed that they want to add an item to their order and that that item is on the menu.",
+                                "url": BEPIS_SERVER_URL + "/calls/" + id + "/order/items",
                                 "input_schema": {
                                     "type": "object",
                                     "properties": {
                                         "item": {
                                             "type": "string",
-                                            "description": "The drink the user would like to order. The only valid values are coke or pepsi.",
+                                            "description": "The name of the item that the user would like to order. The valid values come from the names of the items on the menu.",
                                         }
                                     },
                                     "required": ["item"],
@@ -134,9 +147,8 @@ async def run():
                         if type(message) is str:
                             print(message)
 
-                            # check if an order for this call has been submitted
-                            # this url could work too: BEPIS_SERVER_URL + "/calls/" + id + "/order"
-                            response = requests.get(BEPIS_SERVER_URL + "/calls/" + id)
+                            # check the status of the order for this call
+                            response = requests.get(BEPIS_SERVER_URL + "/calls/" + id + "/order")
                             print(response.text)
                         elif type(message) is bytes:
                             await speaker.play(message)

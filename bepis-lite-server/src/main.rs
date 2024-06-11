@@ -57,7 +57,8 @@ async fn main() {
         .route("/calls", post(create_call))
         .route("/calls/:id", get(get_call))
         .route("/calls/:id/order", get(get_order))
-        .route("/calls/:id/order/items", post(update_order))
+        .route("/calls/:id/order/items", post(add_item_to_order))
+        .route("/calls/:id/order/items", delete(remove_item_from_order))
         .route("/calls/:id/order", delete(clear_order))
         .layer(tower_http::cors::CorsLayer::permissive())
         .with_state(shared_state);
@@ -128,12 +129,12 @@ async fn get_order(
 }
 
 #[debug_handler]
-async fn update_order(
+async fn add_item_to_order(
     Path(id): Path<uuid::Uuid>,
     State(state): State<Arc<Mutex<AppState>>>,
     Json(payload): Json<OrderRequest>,
 ) -> String {
-    dbg!("updating order");
+    dbg!("updating order (adding item)");
     dbg!(&payload);
     let mut state = state.lock().expect("failed to obtain state lock");
     let menu = state.menu.clone();
@@ -158,11 +159,41 @@ async fn update_order(
             }
         }
 
-        format!(
-            "We were able to successfully submit the order! The total price for the order is $10",
-        )
+        format!("We were able to successfully add the item to the order!",)
     } else {
-        "We were unable to submit the order as the specified call id does not exist.".to_string()
+        "We were unable to add the item to the order as the specified call id does not exist."
+            .to_string()
+    }
+}
+
+#[debug_handler]
+async fn remove_item_from_order(
+    Path(id): Path<uuid::Uuid>,
+    State(state): State<Arc<Mutex<AppState>>>,
+    Json(payload): Json<OrderRequest>,
+) -> String {
+    dbg!("updating order (removing item)");
+    dbg!(&payload);
+    let mut state = state.lock().expect("failed to obtain state lock");
+    if state.calls.contains_key(&id) {
+        let call = state.calls.get_mut(&id).expect("failed to obtain the call");
+        //let item = payload.item;
+
+        if let Some(order) = &mut call.order {
+            let index = order
+                .items
+                .iter()
+                .position(|item| *item.name == payload.item);
+            if let Some(index) = index {
+                order.items.remove(index);
+            } else {
+                return format!("That item was not in the order.");
+            }
+        }
+        format!("We were able to successfully remove the item from the order!")
+    } else {
+        "We were unable to remove the item from the order as the specified call id does not exist."
+            .to_string()
     }
 }
 

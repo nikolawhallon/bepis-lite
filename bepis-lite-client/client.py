@@ -25,10 +25,10 @@ CHUNK = 8000
 audio_queue = asyncio.Queue()
 id_queue = asyncio.Queue()
 
-STS_URL = "wss://sts.sandbox.deepgram.com"
-BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
-#STS_URL = "ws://localhost:4000"
-#BEPIS_SERVER_URL = "http://localhost:3000"
+#STS_URL = "wss://sts.sandbox.deepgram.com"
+#BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
+STS_URL = "ws://localhost:4000"
+BEPIS_SERVER_URL = "http://localhost:3000"
 
 
 def callback(input_data, frame_count, time_info, status_flag):
@@ -101,8 +101,8 @@ async def run():
                 "agent": {
                     "listen": {"model": "nova-2"},
                     "think": {
-                        "provider": "anthropic",
-                        "model": "claude-3-haiku-20240307",
+                        "provider": "open_ai",
+                        "model": "gpt-4o",
                         "instructions": "You work taking orders at a drive-through. The menu, including the names, descriptions, and prices for the items that you sell, is as follows: " + menu,
                         # this function is what STS will call to add items to the order
                         # for this call (note the "id" portion of the path)
@@ -110,17 +110,28 @@ async def run():
                             {
                                 "name": "add_item",
                                 "description": "Add an item to an order. Only use this function if the user has confirmed that they want to add an item to their order and that that item is on the menu.",
-                                "url": BEPIS_SERVER_URL + "/calls/" + id + "/order/items",
-                                "input_schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "item": {
-                                            "type": "string",
-                                            "description": "The name of the item that the user would like to order. The valid values come from the names of the items on the menu.",
-                                        }
+                                "parameters": {
+                                    "item": {
+                                        "type": "string",
+                                        "description": "The name of the item that the user would like to order. The valid values come from the names of the items on the menu.",
                                     },
                                     "required": ["item"],
                                 },
+                                "url": BEPIS_SERVER_URL + "/calls/" + id + "/order/items",
+                                "method": "post",
+                            },
+                            {
+                                "name": "remove_item",
+                                "description": "Removes an item from an order. Only use this function if the user has confirmed that they want to remove an item from their order and that that item is on the menu.",
+                                "parameters": {
+                                    "item": {
+                                        "type": "string",
+                                        "description": "The name of the item that the user would like to remove. The valid values come from the names of the items on the menu.",
+                                    },
+                                    "required": ["item"],
+                                },
+                                "url": BEPIS_SERVER_URL + "/calls/" + id + "/order/items",
+                                "method": "delete",
                             }
                         ],
                     },

@@ -111,9 +111,12 @@ async def run():
                                 "name": "add_item",
                                 "description": "Add an item to an order. Only use this function if the user has confirmed that they want to add an item to their order and that that item is on the menu.",
                                 "parameters": {
-                                    "item": {
-                                        "type": "string",
-                                        "description": "The name of the item that the user would like to order. The valid values come from the names of the items on the menu.",
+                                    "type": "object",
+                                    "properties": {
+                                        "item": {
+                                            "type": "string",
+                                            "description": "The name of the item that the user would like to order. The valid values come from the names of the items on the menu.",
+                                        },
                                     },
                                     "required": ["item"],
                                 },
@@ -124,9 +127,12 @@ async def run():
                                 "name": "remove_item",
                                 "description": "Removes an item from an order. Only use this function if the user has confirmed that they want to remove an item from their order and that that item is on the menu.",
                                 "parameters": {
-                                    "item": {
-                                        "type": "string",
-                                        "description": "The name of the item that the user would like to remove. The valid values come from the names of the items on the menu.",
+                                    "type": "object",
+                                    "properties": {
+                                        "item": {
+                                            "type": "string",
+                                            "description": "The name of the item that the user would like to remove. The valid values come from the names of the items on the menu.",
+                                        }
                                     },
                                     "required": ["item"],
                                 },

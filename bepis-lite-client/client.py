@@ -25,10 +25,10 @@ CHUNK = 8000
 audio_queue = asyncio.Queue()
 id_queue = asyncio.Queue()
 
-#STS_URL = "wss://sts.sandbox.deepgram.com"
-#BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
-STS_URL = "ws://localhost:4000"
-BEPIS_SERVER_URL = "http://localhost:3000"
+STS_URL = "wss://sts.sandbox.deepgram.com"
+BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
+#STS_URL = "ws://localhost:4000"
+#BEPIS_SERVER_URL = "http://localhost:3000"
 
 
 def callback(input_data, frame_count, time_info, status_flag):
@@ -138,6 +138,24 @@ async def run():
                                 },
                                 "url": BEPIS_SERVER_URL + "/calls/" + id + "/order/items",
                                 "method": "delete",
+                            },
+                            {
+                                "name": "get_order",
+                                "description": "Gets the order, including all items and their prices. Use this function when cross-checking things like the total cost of the order, or items included in the order.",
+                                "parameters": {
+                                
+                                },
+                                "url": BEPIS_SERVER_URL + "/calls/" + id + "/order",
+                                "method": "get",
+                            },
+                            {
+                                "name": "get_menu",
+                                "description": "Gets the menu. Call this function once at the beginning of the call.",
+                                "parameters": {
+                                
+                                },
+                                "url": BEPIS_SERVER_URL + "/menu",
+                                "method": "get",
                             }
                         ],
                     },

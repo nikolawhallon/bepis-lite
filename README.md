@@ -68,8 +68,8 @@ What is this id used for? Let's take a look at the next part of the sender funct
                 "agent": {
                     "listen": {"model": "nova-2"},
                     "think": {
-                        "provider": "anthropic",
-                        "model": "claude-3-opus-20240229",
+                        "provider": "open_ai",
+                        "model": "gpt-4o",
                         "instructions": "You are a beverage seller. You only sell coke and pepsi.",
                         # this function is what STS will call to submit orders
                         # for this call (note the "id" portion of the path)
@@ -78,7 +78,7 @@ What is this id used for? Let's take a look at the next part of the sender funct
                                 "name": "submit_order",
                                 "description": "Submit an order for a beverage.",
                                 "url": BEPIS_SERVER_URL + "/calls/" + id + "/order",
-                                "input_schema": {
+                                "parameters": {
                                     "type": "object",
                                     "properties": {
                                         "item": {

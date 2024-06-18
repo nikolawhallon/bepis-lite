@@ -15,11 +15,34 @@ struct Call {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 struct OrderRequest {
     item: String,
+    #[serde(default)]
+    quantity: Option<usize>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 struct Order {
     items: Vec<Item>,
+    total_cost: f64,
+}
+
+impl Order {
+    fn new() -> Self {
+        Self {
+            items: Vec::new(),
+            total_cost: 0.0,
+        }
+    }
+
+    fn new_with_item(item: Item) -> Self {
+        let mut order = Self::new();
+        order.add_item(item);
+        order
+    }
+
+    fn add_item(&mut self, item: Item) {
+        self.total_cost += item.price;
+        self.items.push(item);
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -57,7 +80,7 @@ async fn main() {
         .route("/calls", post(create_call))
         .route("/calls/:id", get(get_call))
         .route("/calls/:id/order", get(get_order))
-        .route("/calls/:id/order/items", post(add_item_to_order))
+        .route("/calls/:id/order/items", post(add_items_to_order))
         .route("/calls/:id/order/items", delete(remove_item_from_order))
         .route("/calls/:id/order", delete(clear_order))
         .layer(tower_http::cors::CorsLayer::permissive())
@@ -129,7 +152,7 @@ async fn get_order(
 }
 
 #[debug_handler]
-async fn add_item_to_order(
+async fn add_items_to_order(
     Path(id): Path<uuid::Uuid>,
     State(state): State<Arc<Mutex<AppState>>>,
     Json(payload): Json<OrderRequest>,
@@ -150,16 +173,18 @@ async fn add_item_to_order(
                 .expect("Failed to get item from the menu.")
                 .clone();
 
+            let quantity = payload.quantity.unwrap_or(1);
+
             if let Some(order) = &mut call.order {
-                order.items.push(new_item);
+                for _ in 0..quantity {
+                    order.add_item(new_item.clone());
+                }
             } else {
-                call.order = Some(Order {
-                    items: vec![new_item],
-                });
+                call.order = Some(Order::new_with_item(new_item));
             }
         }
 
-        format!("We were able to successfully add the item to the order!",)
+        format!("We were able to successfully add the item(s) to the order! The current state of the order is: {:?}", call.order)
     } else {
         "We were unable to add the item to the order as the specified call id does not exist."
             .to_string()
@@ -177,20 +202,22 @@ async fn remove_item_from_order(
     let mut state = state.lock().expect("failed to obtain state lock");
     if state.calls.contains_key(&id) {
         let call = state.calls.get_mut(&id).expect("failed to obtain the call");
-        //let item = payload.item;
 
         if let Some(order) = &mut call.order {
-            let index = order
-                .items
-                .iter()
-                .position(|item| *item.name == payload.item);
-            if let Some(index) = index {
-                order.items.remove(index);
-            } else {
-                return format!("That item was not in the order.");
+            let quantity = payload.quantity.unwrap_or(1);
+
+            for _ in 0..quantity {
+                let index = order
+                    .items
+                    .iter()
+                    .position(|item| *item.name == payload.item);
+                if let Some(index) = index {
+                    let removed_item = order.items.remove(index);
+                    order.total_cost -= removed_item.price;
+                }
             }
         }
-        format!("We were able to successfully remove the item from the order!")
+        format!("We were able to successfully remove the item(s) from the order if they were present! The current state of the order is: {:?}", call.order)
     } else {
         "We were unable to remove the item from the order as the specified call id does not exist."
             .to_string()
@@ -207,5 +234,5 @@ async fn clear_order(
     let call = state.calls.get_mut(&id).expect("failed to obtain the call");
     dbg!(&call.order);
     call.order = None;
-    "successfully cleared the call's order"
+    "We were able to successfully cleared the call's order!"
 }

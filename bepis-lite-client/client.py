@@ -27,8 +27,8 @@ id_queue = asyncio.Queue()
 
 STS_URL = "wss://sts.sandbox.deepgram.com"
 BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
-#STS_URL = "ws://localhost:4000"
-#BEPIS_SERVER_URL = "http://localhost:3000"
+# STS_URL = "ws://localhost:4000"
+# BEPIS_SERVER_URL = "http://localhost:3000"
 
 
 def callback(input_data, frame_count, time_info, status_flag):
@@ -71,8 +71,24 @@ async def run():
             response = requests.delete(BEPIS_SERVER_URL + "/menu")
 
             # add some items to the menu
-            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "coke", "description": "a beverage", "price": 1.50, "category": "beverage"})
-            response = requests.post(BEPIS_SERVER_URL + "/menu/items", json = {"name": "pepsi", "description": "a beverage", "price": 2.50, "category": "beverage"})
+            response = requests.post(
+                BEPIS_SERVER_URL + "/menu/items",
+                json={
+                    "name": "coke",
+                    "description": "a beverage",
+                    "price": 1.50,
+                    "category": "beverage",
+                },
+            )
+            response = requests.post(
+                BEPIS_SERVER_URL + "/menu/items",
+                json={
+                    "name": "pepsi",
+                    "description": "a beverage",
+                    "price": 2.50,
+                    "category": "beverage",
+                },
+            )
 
             # get the full menu so that we can give it to the LLM
             response = requests.get(BEPIS_SERVER_URL + "/menu")
@@ -103,13 +119,14 @@ async def run():
                     "think": {
                         "provider": "open_ai",
                         "model": "gpt-4o",
-                        "instructions": "You work taking orders at a drive-through. The menu, including the names, descriptions, and prices for the items that you sell, is as follows: " + menu,
+                        "instructions": "You work taking orders at a drive-through. The menu, including the names, descriptions, and prices for the items that you sell, is as follows: "
+                        + menu,
                         # this function is what STS will call to add items to the order
                         # for this call (note the "id" portion of the path)
                         "functions": [
                             {
                                 "name": "add_item",
-                                "description": "Add an item to an order. Only use this function if the user has confirmed that they want to add an item to their order and that that item is on the menu.",
+                                "description": "Add an item to an order, with an optional quantity. Only use this function if the user has confirmed that they want to add an item to their order and that that item is on the menu.",
                                 "parameters": {
                                     "type": "object",
                                     "properties": {
@@ -117,46 +134,56 @@ async def run():
                                             "type": "string",
                                             "description": "The name of the item that the user would like to order. The valid values come from the names of the items on the menu.",
                                         },
+                                        "quantity": {
+                                            "type": "string",
+                                            "description": "The quantity of this item that the user would like to add. Optional.",
+                                        },
                                     },
                                     "required": ["item"],
                                 },
-                                "url": BEPIS_SERVER_URL + "/calls/" + id + "/order/items",
+                                "url": BEPIS_SERVER_URL
+                                + "/calls/"
+                                + id
+                                + "/order/items",
                                 "method": "post",
                             },
                             {
                                 "name": "remove_item",
-                                "description": "Removes an item from an order. Only use this function if the user has confirmed that they want to remove an item from their order and that that item is on the menu.",
+                                "description": "Removes an item from an order, with an optional quantity. Only use this function if the user has confirmed that they want to remove an item from their order and that that item is on the menu.",
                                 "parameters": {
                                     "type": "object",
                                     "properties": {
                                         "item": {
                                             "type": "string",
                                             "description": "The name of the item that the user would like to remove. The valid values come from the names of the items on the menu.",
-                                        }
+                                        },
+                                        "quantity": {
+                                            "type": "string",
+                                            "description": "The quantity of this item that the user would like to remove. Optional.",
+                                        },
                                     },
                                     "required": ["item"],
                                 },
-                                "url": BEPIS_SERVER_URL + "/calls/" + id + "/order/items",
+                                "url": BEPIS_SERVER_URL
+                                + "/calls/"
+                                + id
+                                + "/order/items",
                                 "method": "delete",
                             },
                             {
                                 "name": "get_order",
-                                "description": "Gets the order, including all items and their prices. Use this function when cross-checking things like the total cost of the order, or items included in the order.",
-                                "parameters": {
-                                
-                                },
+                                "description": "Gets the order, including all items, their prices, and the total order cost. Use this function when cross-checking things like the total cost of the order, or items included in the order.",
+                                "parameters": {},
                                 "url": BEPIS_SERVER_URL + "/calls/" + id + "/order",
                                 "method": "get",
                             },
                             {
                                 "name": "get_menu",
-                                "description": "Gets the menu. Call this function once at the beginning of the call.",
-                                "parameters": {
-                                
-                                },
+                                "description": "Gets the menu. Call this function if you are ever unclear on what is on the menu.",
+                                "parameters": {},
                                 "url": BEPIS_SERVER_URL + "/menu",
                                 "method": "get",
-                            }
+                            },
                         ],
                     },
                     "speak": {"model": "aura-asteria-en"},
@@ -183,7 +210,9 @@ async def run():
                             print(message)
 
                             # check the status of the order for this call
-                            response = requests.get(BEPIS_SERVER_URL + "/calls/" + id + "/order")
+                            response = requests.get(
+                                BEPIS_SERVER_URL + "/calls/" + id + "/order"
+                            )
                             print(response.text)
                         elif type(message) is bytes:
                             await speaker.play(message)

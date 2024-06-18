@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use axum::extract::{Json, Path, State};
+use axum::http::StatusCode;
 use axum::routing::{delete, get, post};
 use axum::{debug_handler, Router};
 use serde::{Deserialize, Serialize};
@@ -131,24 +132,48 @@ async fn create_call(State(state): State<Arc<Mutex<AppState>>>) -> String {
 async fn get_call(
     Path(id): Path<uuid::Uuid>,
     State(state): State<Arc<Mutex<AppState>>>,
-) -> Json<Call> {
+) -> Result<Json<Call>, (StatusCode, String)> {
     dbg!("getting info for a call");
-    let state = state.lock().expect("failed to obtain state lock");
-    let call = state.calls.get(&id).expect("failed to obtain the call");
-    dbg!(&call);
-    Json(call.clone())
+    if let Ok(state) = state.lock() {
+        if let Some(call) = state.calls.get(&id) {
+            dbg!(&call.order);
+            return Ok(Json(call.clone()));
+        } else {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Bad Request - call does not exist.".to_string(),
+            ));
+        }
+    }
+
+    Err((
+        StatusCode::INTERNAL_SERVER_ERROR,
+        "Internal Server Error".to_string(),
+    ))
 }
 
 #[debug_handler]
 async fn get_order(
     Path(id): Path<uuid::Uuid>,
     State(state): State<Arc<Mutex<AppState>>>,
-) -> Json<Option<Order>> {
+) -> Result<Json<Option<Order>>, (StatusCode, String)> {
     dbg!("getting info for a call order");
-    let state = state.lock().expect("failed to obtain state lock");
-    let call = state.calls.get(&id).expect("failed to obtain the call");
-    dbg!(&call.order);
-    Json(call.order.clone())
+    if let Ok(state) = state.lock() {
+        if let Some(call) = state.calls.get(&id) {
+            dbg!(&call.order);
+            return Ok(Json(call.order.clone()));
+        } else {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Bad Request - call does not exist.".to_string(),
+            ));
+        }
+    }
+
+    Err((
+        StatusCode::INTERNAL_SERVER_ERROR,
+        "Internal Server Error".to_string(),
+    ))
 }
 
 #[debug_handler]

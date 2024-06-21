@@ -25,10 +25,10 @@ CHUNK = 8000
 audio_queue = asyncio.Queue()
 id_queue = asyncio.Queue()
 
-STS_URL = "wss://sts.sandbox.deepgram.com"
-BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
-# STS_URL = "ws://localhost:4000"
-# BEPIS_SERVER_URL = "http://localhost:3000"
+#STS_URL = "wss://sts.sandbox.deepgram.com"
+#BEPIS_SERVER_URL = "https://wcdonaldsquest.deepgram.com"
+STS_URL = "ws://localhost:4000"
+BEPIS_SERVER_URL = "http://localhost:3000"
 
 
 def callback(input_data, frame_count, time_info, status_flag):
@@ -209,10 +209,16 @@ async def run():
                         if type(message) is str:
                             print(message)
 
+                            # handle barge-in
+                            decoded = json.loads(message)
+                            if decoded['type'] == 'UserStartedSpeaking':
+                                speaker.stop()
+
                             # check the status of the order for this call
                             response = requests.get(
                                 BEPIS_SERVER_URL + "/calls/" + id + "/order"
                             )
+
                             print(response.text)
                         elif type(message) is bytes:
                             await speaker.play(message)
@@ -275,6 +281,14 @@ class Speaker:
 
     async def play(self, data):
         return await self._queue.async_q.put(data)
+
+    def stop(self):
+        if self._queue and self._queue.async_q:
+            while not self._queue.async_q.empty():
+                try:
+                    self._queue.async_q.get_nowait()
+                except janus.QueueEmpty:
+                    break
 
 
 if __name__ == "__main__":

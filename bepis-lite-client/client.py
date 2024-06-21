@@ -25,7 +25,7 @@ CHUNK = 8000
 audio_queue = asyncio.Queue()
 id_queue = asyncio.Queue()
 
-STS_URL = "ws://localhost:5000"
+STS_URL = "ws://localhost:4000"
 BEPIS_SERVER_URL = "http://localhost:3000"
 
 
@@ -98,6 +98,7 @@ async def run():
                                 "name": "submit_order",
                                 "description": "Submit an order for a beverage.",
                                 "url": BEPIS_SERVER_URL + "/calls/" + id + "/order",
+                                "method": "post",
                                 "parameters": {
                                     "type": "object",
                                     "properties": {
@@ -133,6 +134,10 @@ async def run():
                     async for message in ws:
                         if type(message) is str:
                             print(message)
+
+                            decoded = json.loads(message)
+                            if decoded['type'] == 'UserStartedSpeaking':
+                                speaker.stop()
 
                             # check if an order for this call has been submitted
                             # this url could work too: BEPIS_SERVER_URL + "/calls/" + id + "/order"
@@ -199,6 +204,14 @@ class Speaker:
 
     async def play(self, data):
         return await self._queue.async_q.put(data)
+
+    def stop(self):
+        if self._queue and self._queue.async_q:
+            while not self._queue.async_q.empty():
+                try:
+                    self._queue.async_q.get_nowait()
+                except janus.QueueEmpty:
+                    break
 
 
 if __name__ == "__main__":

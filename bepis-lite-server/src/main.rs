@@ -6,6 +6,11 @@ use axum::http::StatusCode;
 use axum::routing::{delete, get, post};
 use axum::{debug_handler, Router};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+enum Error {
+    Query,
+}
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 struct Call {
@@ -75,6 +80,7 @@ async fn main() {
 
     // Note: this isn't super REST-y
     let app = Router::new()
+        .route("/google", post(get_google))
         .route("/menu", get(get_menu))
         .route("/menu/items", post(add_item_to_menu))
         .route("/menu/items", delete(clear_menu))
@@ -260,4 +266,42 @@ async fn clear_order(
     dbg!(&call.order);
     call.order = None;
     "We were able to successfully cleared the call's order!"
+}
+
+#[debug_handler]
+async fn get_google(Json(payload): Json<Value>) -> Result<String, (StatusCode, String)> {
+    dbg!("getting something from google");
+
+    let client = reqwest::Client::new();
+    let url = "https://customsearch.googleapis.com/customsearch/v1?cx=824c77b451c2c4073&key=AIzaSyDRtnU9fiyV6-SA0zYRH9l-M6faCPIsD98";
+    let client = client.request(axum::http::Method::GET, url);
+
+    if let Ok(client) = querify(client, &payload) {
+        if let Ok(response) = client.send().await {
+            if let Ok(text) = response.text().await {
+                return Ok(text);
+            }
+        }
+    }
+
+    Err((
+        StatusCode::INTERNAL_SERVER_ERROR,
+        "Internal Server Error".to_string(),
+    ))
+}
+
+fn querify(
+    builder: reqwest::RequestBuilder,
+    arguments: &Value,
+) -> Result<reqwest::RequestBuilder, Error> {
+    match arguments {
+        Value::Object(map)
+            if map
+                .values()
+                .all(|v| matches!(v, Value::String(_) | Value::Number(_))) =>
+        {
+            Ok(builder.query(arguments))
+        }
+        _ => Err(Error::Query),
+    }
 }

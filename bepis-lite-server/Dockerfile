@@ -13,7 +13,7 @@ RUN apt-get update && \
 		libssl-dev \
 		pkg-config
 
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable && \
+RUN curl https://sh.rustup.rs -sSfL | sh -s -- -y --profile minimal --default-toolchain stable && \
 	. $HOME/.cargo/env
 
 COPY . /bepis-lite-server

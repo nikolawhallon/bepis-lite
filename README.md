@@ -68,7 +68,9 @@ What is this id used for? Let's take a look at the next part of the sender funct
                 "agent": {
                     "listen": {"model": "nova-2"},
                     "think": {
-                        "provider": "open_ai",
+                        "provider": {
+                            "type": "open_ai",
+                        },
                         "model": "gpt-4o",
                         "instructions": "You are a beverage seller. You only sell coke and pepsi.",
                         # this function is what STS will call to submit orders

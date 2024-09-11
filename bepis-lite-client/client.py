@@ -88,7 +88,9 @@ async def run():
                 "agent": {
                     "listen": {"model": "nova-2"},
                     "think": {
-                        "provider": "open_ai",
+                        "provider": {
+                            "open_ai",
+                        },
                         "model": "gpt-4o",
                         "instructions": "You are a beverage seller. You only sell coke and pepsi.",
                         # this function is what STS will call to submit orders
